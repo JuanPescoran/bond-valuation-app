@@ -25,6 +25,25 @@ export interface AuthResponse {
   token: string;
 }
 
+/**
+ * Representa la solicitud de creación de usuario que se envía al backend.
+ * Coincide con el DTO `SignUpRequest` del backend.
+ */
+export interface UserCreationRequest {
+  username: string; // El email del usuario
+  password: string; // La contraseña del usuario
+  roles: string[]; // Roles asignados, ej: ["ROLE_USER"]
+}
+
+/**
+ * Representa la respuesta que el backend devuelve tras un
+ * registro ('sign-up') exitoso. No incluye un token.
+ */
+export interface UserCreationResponse {
+  id: number;
+  username: string;
+  roles: string[];
+}
 
 // =========================================================
 // == Tipos para el Bounded Context de Estimación (Bonds) ==

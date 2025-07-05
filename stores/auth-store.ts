@@ -1,7 +1,7 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import Cookies from "js-cookie"
-import { AuthResponse, User } from "@/types";
+import { AuthResponse, User, UserCreationRequest, UserCreationResponse } from "@/types";
 import { toast } from "sonner";
 
 interface AuthState {
@@ -10,7 +10,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isAuthLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (nombre: string, email: string, password: string) => Promise<void>;
+  register: (email: string, password: string) => Promise<void>; 
   logout: () => void;
   initialize: () => void;
 }
@@ -84,35 +84,44 @@ export const useAuthStore = create<AuthState>()(
           throw error;
         }
       },
-      register: async (username: string, password: string) => {
-            try {
-        // El endpoint correcto es /authentication/sign-up
+      register: async (email, password) => {
+        // El bloque try/catch ya maneja los errores, lanzándolos para que el componente sepa que algo falló.
+        try {
+          // Construimos el objeto que coincide con el tipo UserCreationRequest
+          const requestBody: UserCreationRequest = {
+            username: email,
+            password: password,
+            roles: ["ROLE_USER"], // El rol se asigna aquí, no en el formulario. ¡Correcto!
+          };
+
           const response = await fetch(`${API_BASE_URL}/authentication/sign-up`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              username,
-              password,
-              roles: ["ROLE_USER"], // Asumimos que un nuevo usuario siempre es ROLE_USER
-            }),
+            body: JSON.stringify(requestBody),
           });
 
+          // Si la respuesta no es OK, leemos el JSON del error y lo lanzamos.
           if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.message || "Error al crear la cuenta");
+            // Usamos el mensaje del backend si existe, si no, un mensaje genérico.
+            throw new Error(errorData.message || "Error al crear la cuenta.");
           }
-          
-          // Opcional: Después de registrarse, puedes hacer login automáticamente o redirigir a la página de login.
-          // Aquí asumimos que no hace login automático.
-          } catch (error) {
-        // --- AÑADIMOS FEEDBACK DE ERROR ---
-        console.error("Register error:", error);
-        toast.error("Fallo en el registro", {
-            description: error instanceof Error ? error.message : "Inténtalo de nuevo más tarde."
-        });
-        throw error;
-    }
 
+          // Aunque no usemos los datos de la respuesta, es buena práctica
+          // confirmar que el cuerpo de la respuesta es un JSON válido como se espera.
+          const createdUser: UserCreationResponse = await response.json();
+          console.log("Usuario creado exitosamente:", createdUser);
+          
+          // No hacemos set() del estado aquí, porque registrar no es iniciar sesión.
+
+        } catch (error) {
+          console.error("Error en el registro:", error);
+          toast.error("Fallo en el registro", {
+            description: error instanceof Error ? error.message : "Por favor, inténtalo de nuevo más tarde."
+          });
+          // Re-lanzamos el error para que el `catch` en el componente pueda reaccionar (ej: detener el spinner).
+          throw error;
+        }
       },
 
       logout: () => {

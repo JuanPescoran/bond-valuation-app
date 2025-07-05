@@ -55,22 +55,32 @@ export default function RegisterPage() {
     },
   });
 
+    // La función onSubmit maneja la lógica de la UI (estado de carga, redirección).
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
     try {
-      // En el backend, el 'nombre' no es necesario para el registro, solo el email y password.
-      await register("Nuevo Usuario", data.username, data.password);
+      // Se delega toda la lógica de la API al store.
+      // El componente solo sabe que debe llamar a 'register' con el email y la contraseña.
+      await register(data.username, data.password);
       
-      // El toast de éxito ya está en el store, pero podemos añadir uno aquí para confirmar la redirección.
-      toast.info("Serás redirigido a la página de inicio de sesión.");
+      // Si la función 'register' se completa sin lanzar un error, la operación fue exitosa.
+      // El componente se encarga de la retroalimentación de éxito y la navegación.
+      toast.success("¡Cuenta creada con éxito!", {
+        description: "Ahora serás redirigido para que inicies sesión.",
+      });
       router.push("/login");
 
     } catch (err) {
-      // El toast de error ya se muestra desde el store. No es necesario hacer nada más aquí.
+      // Si 'register' lanzó un error, el 'catch' de aquí lo atrapa.
+      // No necesitamos mostrar un toast de error aquí, porque el store ya lo hizo.
+      // El único propósito de este bloque es permitir que el 'finally' se ejecute correctamente.
+      console.error("Fallo el flujo de registro en el componente.");
     } finally {
+      // Este bloque se ejecuta siempre, tanto en éxito como en fracaso.
+      // Ideal para detener el estado de carga.
       setIsLoading(false);
     }
-  };
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-muted/40">
