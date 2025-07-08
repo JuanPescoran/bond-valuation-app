@@ -57,20 +57,23 @@ export interface CreateValuationRequest {
   valuationName: string;
   userId: number;
   faceValue: number;
-  issuePrice: number;
-  purchasePrice: number;
+  marketPrice: number;
   issueDate: string;      // Formato "AAAA-MM-DD"
   maturityDate: string;   // Formato "AAAA-MM-DD"
   totalPeriods: number;
   rateType: "EFFECTIVE" | "NOMINAL";
   rateValue: number;
-  capitalization: "DAY" | "MONTH" | "FORTNIGHT" | "BIMONTHLY" | "QUARTER" | "FOUR_MONTHLY" | "SEMESTER" | "YEAR" | null;
-  frequency: "DAY" | "MONTH" | "FORTNIGHT" | "BIMONTHLY" | "QUARTER" | "FOUR_MONTHLY" | "SEMESTER" | "YEAR";
+  capitalization: "DAY" | "MONTH" | "QUARTER" | "SEMESTER" | "YEAR" | "FORTNIGHT" | "BIMONTHLY" | "FOUR_MONTHLY" | null;
+  frequency: "DAY" | "MONTH" | "QUARTER" | "SEMESTER" | "YEAR" | "FORTNIGHT" | "BIMONTHLY" | "FOUR_MONTHLY";
   graceType: "NONE" | "PARTIAL" | "TOTAL";
   graceCapital: number;
   graceInterest: number;
-  commission: number;
   marketRate: number;
+  issuerStructuringCost: number;
+  issuerPlacementCost: number;
+  issuerCavaliCost: number;
+  investorSabCost: number;
+  investorCavaliCost: number;
 }
 
 /**

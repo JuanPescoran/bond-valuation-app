@@ -36,7 +36,7 @@ export const useBondStore = create<BondState>((set, get) => ({
    * Envía los datos del formulario al backend, que calcula y guarda la valoración.
    * Devuelve la valoración completa.
    */
-  calculateBond: async (input: CreateValuationRequest): Promise<ValuationResponse | null> => {
+   calculateBond: async (input: CreateValuationRequest): Promise<ValuationResponse | null> => {
     set({ isCalculating: true, currentInput: input, currentResult: null });
     const token = useAuthStore.getState().token;
 
@@ -47,6 +47,7 @@ export const useBondStore = create<BondState>((set, get) => ({
     }
 
     try {
+      console.log("Enviando datos:", input); 
       const response = await fetch(`${API_BASE_URL}/valuations`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
@@ -54,8 +55,26 @@ export const useBondStore = create<BondState>((set, get) => ({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Error en el cálculo del bono.");
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+        
+        let errorMessage = `Error ${response.status}`;
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        console.log("Si, es el calculate xd");
+        throw new Error(errorMessage);
+      }
+
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const responseText = await response.text();
+        console.error("Non-JSON response:", responseText);
+        throw new Error("El servidor devolvió una respuesta no válida");
       }
 
       const result: ValuationResponse = await response.json();
@@ -67,8 +86,15 @@ export const useBondStore = create<BondState>((set, get) => ({
 
     } catch (error) {
       console.error("Error in calculateBond:", error);
+      
+      let errorMessage = "Ocurrió un error inesperado.";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       toast.error("Fallo en el cálculo", {
-        description: error instanceof Error ? error.message : "Ocurrió un error inesperado.",
+        description: errorMessage,
       });
       return null;
     } finally {
